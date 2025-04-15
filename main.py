@@ -1,22 +1,23 @@
 import json
+import os
+import streamlit as st
+import requests
 from sympy import sympify
-from transformers import pipeline, set_seed
+from dotenv import load_dotenv
 
-set_seed(42)
-try:
-    generator = pipeline('text-generation', model='distilgpt2')
-except Exception as e:
-    print(f"Erro ao carregar o modelo: {e}")
-    generator = None
+load_dotenv()
+
+LLM_URL = os.getenv("LLM_URL", "http://localhost:8000/v1/completions")
+LLM_MODEL = os.getenv("LLM_MODEL", "mistral")
 
 try:
     with open('data/dev-data.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 except FileNotFoundError:
-    print("Erro: Arquivo 'data/dev-data.json' não encontrado.")
+    st.error("Erro: Arquivo 'data/dev-data.json' não encontrado.")
     data = []
 except json.JSONDecodeError:
-    print("Erro: Formato inválido no arquivo JSON.")
+    st.error("Erro: Formato inválido no arquivo JSON.")
     data = []
 
 def check_answer(user_answer, correct_answer):
@@ -32,45 +33,58 @@ def generate_feedback(user_answer, correct_answer, problem):
         return "Correto! Parabéns!"
     else:
         fallback = "Tente novamente. Dica: Para somar frações, encontre o denominador comum."
-        if generator:
-            try:
-                prompt = (
-                    f"Você é um professor paciente no Brasil. O aluno tentou resolver '{problem}' e respondeu '{user_answer}'. "
-                    f"A resposta correta é '{correct_answer}'. Explique o erro de forma curta e clara, em português brasileiro, "
-                    f"como se estivesse ensinando frações para um estudante."
-                )
-                response = generator(prompt, max_length=80, num_return_sequences=1, truncation=True)[0]['generated_text']
-                response = response.replace(prompt, "").strip()
-                if response:
-                    return response
-            except:
-                pass
-        else:
-            return "wtf"
-        return fallback
+        try:
+            prompt = (
+                f"Você é um professor paciente no Brasil. O aluno tentou resolver '{problem}' e respondeu '{user_answer}'. "
+                f"A resposta correta é '{correct_answer}'. Explique o erro de forma curta e clara, em português brasileiro, "
+                f"como se estivesse ensinando frações para um estudante."
+            )
+            payload = {
+                "model": LLM_MODEL,
+                "prompt": prompt,
+                "max_tokens": 80,
+                "temperature": 0.7
+            }
+            response = requests.post(LLM_URL, json=payload)
+            response.raise_for_status()
+            result = response.json()
+            feedback = result.get("choices", [{}])[0].get("text", "").strip()
+            return feedback if feedback else fallback
+        except:
+            return fallback
 
-def show_topic(topic):
-    for t in data:
-        if t["topic"] == topic:
-            print("Explicação:", t["explanation"])
-            print("Exemplo:", t["example"])
-            return t["questions"]
-    print(f"Tópico '{topic}' não encontrado.")
-    return []
+st.title("Tutor de Matemática Básica")
 
-print("Bem-vindo ao Tutor de Matemática Básica!")
 if not data:
-    print("Nenhum dado disponível. Verifique o arquivo 'data/dev-data.json'.")
+    st.write("Nenhum dado disponível. Verifique o arquivo 'data/dev-data.json'.")
 else:
-    topic = "soma_frações"
-    questions = show_topic(topic)
-    current_level = "easy"
+    topics = [t["topic"] for t in data]
+    topic = st.selectbox("Escolha o tópico:", topics)
+    topic_data = next(t for t in data if t["topic"] == topic)
 
-    for q in questions:
-        if q["level"] == current_level:
-            print("\nQuestão:", q["problem"])
-            user_answer = input("Sua resposta: ")
-            feedback = generate_feedback(user_answer, q["answer"], q["problem"])
-            print(feedback)
-            if "Correto" in feedback:
-                current_level = "medium"
+    st.write("**Explicação**:")
+    st.write(topic_data["explanation"])
+    st.write("**Exemplo**:")
+    for ex in topic_data["example"]:
+        st.write(ex)
+
+    levels = ["easy", "medium", "difficult"]
+    level = st.selectbox("Nível de dificuldade:", levels)
+    questions = [q for q in topic_data["questions"] if q["level"] == level]
+
+    if questions:
+        question = questions[0]
+        st.write("**Questão**:")
+        st.write(question["problem"])
+
+        user_answer = st.text_input("Sua resposta:", key=f"answer_{question['problem']}")
+
+        if st.button("Verificar"):
+            if user_answer:
+                feedback = generate_feedback(user_answer, question["answer"], question["problem"])
+                if "Correto" in feedback:
+                    st.success(feedback)
+                else:
+                    st.error(feedback)
+            else:
+                st.warning("Por favor, insira uma resposta.")
