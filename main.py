@@ -35,15 +35,16 @@ def generate_feedback(user_answer, correct_answer, problem):
         fallback = "Tente novamente. Dica: Para somar frações, encontre o denominador comum."
         try:
             prompt = (
-                f"Você é um professor paciente no Brasil. O aluno tentou resolver '{problem}' e respondeu '{user_answer}'. "
-                f"A resposta correta é '{correct_answer}'. Explique o erro de forma curta e clara, em português brasileiro, "
-                f"como se estivesse ensinando frações para um estudante."
+                f"Você é um professor de matemática. O aluno tentou resolver '{problem}' e respondeu '{user_answer}'. "
+                f"A resposta correta é '{correct_answer}'. Explique o erro de forma curta e clara, em pt-BR, "
+                f"como se estivesse ensinando frações para um estudante. Não retorne seu fluxo de pensamento, apenas a resolução passo a passo."
+                f"Use LaTeX para as equações/resolução."
             )
             payload = {
                 "model": LLM_MODEL,
                 "prompt": prompt,
-                "max_tokens": 80,
-                "temperature": 0.7
+                "max_tokens": 1000,
+                "temperature": 0.6
             }
             response = requests.post(LLM_URL, json=payload)
             response.raise_for_status()
@@ -82,8 +83,9 @@ else:
         if st.button("Verificar"):
             if user_answer:
                 feedback = generate_feedback(user_answer, question["answer"], question["problem"])
+                st.markdown(f"**Feedback**: {feedback}", unsafe_allow_html=True)
                 if "Correto" in feedback:
-                    st.success(feedback)
+                    st.success("Acertou")
                 else:
                     st.error(feedback)
             else:
