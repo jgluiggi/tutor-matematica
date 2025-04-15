@@ -28,6 +28,16 @@ def check_answer(user_answer, correct_answer):
     except:
         return False
 
+def format_latex_feedback(feedback):
+    # Adicionar "$" antes de \frac e após o segundo "}"
+    formatted_feedback = feedback.replace("[", "").replace("]", "")  # Substitui colchetes por cifrões
+
+    # Ajustar \frac para sempre estar no formato $ \frac{}{} $
+    import re
+    formatted_feedback = re.sub(r"\frac{(.*?)}{(.*?)}", r"$\frac{\1}{\2}$", formatted_feedback)
+
+    return formatted_feedback
+
 def generate_feedback(user_answer, correct_answer, problem):
     if check_answer(user_answer, correct_answer):
         return "Correto! Parabéns!"
@@ -38,7 +48,7 @@ def generate_feedback(user_answer, correct_answer, problem):
                 f"Você é um professor de matemática. O aluno tentou resolver '{problem}' e respondeu '{user_answer}'. "
                 f"A resposta correta é '{correct_answer}'. Explique o erro de forma curta e clara, em pt-BR, "
                 f"como se estivesse ensinando frações para um estudante. Não retorne seu fluxo de pensamento, apenas a resolução passo a passo."
-                f"Use LaTeX para as equações/resolução coloque os valores dentro de $$ ao invez de []."
+                f"Use LaTeX para as equações/resolução coloque os valores dentro de $$ ao invés de []."
             )
             payload = {
                 "model": LLM_MODEL,
@@ -49,7 +59,8 @@ def generate_feedback(user_answer, correct_answer, problem):
             response = requests.post(LLM_URL, json=payload)
             response.raise_for_status()
             result = response.json()
-            feedback = result.get("choices", [{}])[0].get("text", "").strip().split('</think>')[-1].strip()
+            feedback = result.get("choices", {})[0].get("text", "").strip().split('</think>')[-1].strip()
+            feedback = format_latex_feedback(feedback)  # Formatar o feedback para renderização LaTeX
             return feedback if feedback else fallback
         except:
             return fallback
