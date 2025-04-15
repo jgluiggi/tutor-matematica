@@ -38,7 +38,7 @@ def generate_feedback(user_answer, correct_answer, problem):
                 f"Você é um professor de matemática. O aluno tentou resolver '{problem}' e respondeu '{user_answer}'. "
                 f"A resposta correta é '{correct_answer}'. Explique o erro de forma curta e clara, em pt-BR, "
                 f"como se estivesse ensinando frações para um estudante. Não retorne seu fluxo de pensamento, apenas a resolução passo a passo."
-                f"Use LaTeX para as equações/resolução."
+                f"Use LaTeX para as equações/resolução coloque os valores dentro de $$ ao invez de []."
             )
             payload = {
                 "model": LLM_MODEL,
@@ -49,7 +49,7 @@ def generate_feedback(user_answer, correct_answer, problem):
             response = requests.post(LLM_URL, json=payload)
             response.raise_for_status()
             result = response.json()
-            feedback = result.get("choices", [{}])[0].get("text", "").strip()
+            feedback = result.get("choices", [{}])[0].get("text", "").strip().split('</think>')[-1].strip()
             return feedback if feedback else fallback
         except:
             return fallback
@@ -83,10 +83,10 @@ else:
         if st.button("Verificar"):
             if user_answer:
                 feedback = generate_feedback(user_answer, question["answer"], question["problem"])
-                st.markdown(f"**Feedback**: {feedback}", unsafe_allow_html=True)
                 if "Correto" in feedback:
                     st.success("Acertou")
                 else:
-                    st.error(feedback)
+                    st.error("Tente novamente.")  # Mensagem curta em vermelho
+                    st.write(feedback)  # Explicação detalhada em preto
             else:
                 st.warning("Por favor, insira uma resposta.")
