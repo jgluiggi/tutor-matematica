@@ -44,15 +44,15 @@ def generate_feedback(user_answer, correct_answer, problem):
     else:
         fallback = "Tente novamente. Dica: Para somar frações, encontre o denominador comum."
         try:
-            prompt = (
-                f"Você é um professor de matemática. O aluno tentou resolver '{problem}' e respondeu '{user_answer}'. "
-                f"A resposta correta é '{correct_answer}'. Explique o erro de forma curta e clara, em pt-BR, "
-                f"como se estivesse ensinando frações para um estudante. Não retorne seu fluxo de pensamento, apenas a resolução passo a passo."
-                f"Use LaTeX para as equações/resolução coloque os valores dentro de $$ ao invés de []."
-            )
+            student_message = f"Eu tentei resolver '{problem}' e respondi '{user_answer}', explique meu erro e tente me direcionar no caminho certo sem revelar a resposta."
+            messages=[
+              {"role": "system", "content": "Você é um professor de matemática. Explique o erro de forma curta e clara, em pt-BR, como se estivesse ensinando frações para um estudante. Não retorne seu fluxo de pensamento, apenas a resolução passo a passo. Use LaTeX para as equações/resolução coloque os valores dentro de $$ ao invés de []."},
+              {"role": "user", "content": student_message}
+            ],
+            print(messages)
             payload = {
                 "model": LLM_MODEL,
-                "prompt": prompt,
+                "messages": messages,
                 "max_tokens": 1000,
                 "temperature": 0.6
             }
