@@ -16,6 +16,6 @@ estamos rodando uma LLM 7B através do LM Studio para esta aplicação
 
 ## Iterações de Modelos
 
-- pierreguillou/gpt2-small-portuguese
-- distilbert/distilgpt2
-- **deepseek-ai/DeepSeek-R1-Distill-Qwen-7B**
+- [pierreguillou/gpt2-small-portuguese](https://huggingface.co/pierreguillou/gpt2-small-portuguese)
+- [distilbert/distilgpt2](https://huggingface.co/distilbert/distilgpt2)
+- [**deepseek-ai/DeepSeek-R1-Distill-Qwen-7B**](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B)
