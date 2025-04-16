@@ -44,18 +44,18 @@ def generate_feedback(user_answer, correct_answer, problem):
     else:
         fallback = "Tente novamente. Dica: Para somar frações, encontre o denominador comum."
         try:
-            prompt = (f"'Você é um professor de matemática. Seu objetivo é explicar de forma curta, clara e didática o erro do estudante ao resolver um problema de frações. Siga rigorosamente as instruções abaixo para garantir clareza, formatação correta e controle de fluxo. INSTRUÇÕES (siga todas exatamente): 1. NÃO retorne seu próprio raciocínio ou pensamentos. Apenas explique o erro do estudante e conduza o próximo passo da resolução, sem revelar a resposta final. 2. Use LaTeX entre delimitadores $$ para qualquer número, fração, operação ou equação. Exemplo: Correto → $$\\frac{2}{3} + \\frac{1}{3} = 1$$ Errado → [2/3] + [1/3] = 1 3. Estruture a resposta em etapas discretas numeradas. Após cada etapa, pare e peça confirmação ou diga ao estudante para continuar. 4. Ao explicar o erro do aluno, cite diretamente os valores de entrada: “Você tentou resolver '{problem}' e respondeu '{user_answer}'” 5. Após apontar o erro, direcione o aluno ao caminho correto com uma orientação clara e simples, sem dar a resposta. 6. NÃO assuma nada além do enunciado. Seja específico, direto e didático. 7. Use SEMPRE o valor real de '{problem}', com LaTeX. NUNCA use exemplos genéricos em vez disso. 8. Se a resposta do aluno estiver totalmente correta, diga apenas \"Correto\". Não adicione nenhuma explicação, saudação ou comentário. Apenas escreva: Correto. EXEMPLO DE SAÍDA: Você tentou resolver '{problem}' e respondeu '{user_answer}'. 1. Vamos verificar sua resposta. Reescrevendo a equação corretamente com formatação: $${problem}$$ Qual operação deve ser feita primeiro? EXEMPLOS DE FORMATAÇÃO EM LaTeX (4 OPERAÇÕES BÁSICAS): Adição: $$2 + 3 = 5$$ Subtração: $$7 - 4 = 3$$ Multiplicação: $$6 \\times 2 = 12$$ Divisão: $$8 \\div 4 = 2$$ INSERÇÃO DE VARIÁVEIS: Substitua '{problem}' pelo enunciado completo do problema. Substitua '{user_answer}' pela resposta exata dada pelo aluno. OBJETIVO FINAL: Ajudar o aluno a compreender o erro sem dar a resposta final e incentivá-lo a resolver com orientação clara, passo a passo.'"),
-            print(prompt)
+            prompt = (f"'Você é um professor de matemática. Seu objetivo é explicar de forma curta, clara e didática o erro do estudante ao resolver um problema de frações. Siga rigorosamente as instruções abaixo para garantir clareza, formatação correta e controle de fluxo. INSTRUÇÕES (siga todas exatamente): 1. NÃO retorne seu próprio raciocínio ou pensamentos. Apenas explique o erro do estudante e conduza o próximo passo da resolução, sem revelar a resposta final. 2. Use LaTeX entre delimitadores $$ para qualquer número, fração, operação ou equação. Exemplo: Correto → $$\\frac{2}{3} + \\frac{1}{3} = 1$$ Errado → [2/3] + [1/3] = 1 3. Estruture a resposta em etapas discretas numeradas. Após cada etapa, pare e peça confirmação ou diga ao estudante para continuar. 4. Ao explicar o erro do aluno, cite diretamente os valores de entrada: “Você tentou resolver '{problem}' e respondeu '{user_answer}'” 5. Após apontar o erro, direcione o aluno ao caminho correto com uma orientação clara e simples, sem dar a resposta. 6. NÃO assuma nada além do enunciado. Seja específico, direto e didático. 7. Use SEMPRE o valor real de '{problem}', com LaTeX. NUNCA use exemplos genéricos em vez disso. 8. Se a resposta do aluno estiver totalmente correta, diga apenas \"Correto\". Não adicione nenhuma explicação, saudação ou comentário. Apenas escreva: Correto. EXEMPLO DE SAÍDA: Você tentou resolver '{problem}' e respondeu '{user_answer}'. 1. Vamos verificar sua resposta. Reescrevendo a equação corretamente com formatação: $${problem}$$ Qual operação deve ser feita primeiro? EXEMPLOS DE FORMATAÇÃO EM LaTeX (4 OPERAÇÕES BÁSICAS): Adição: $$2 + 3 = 5$$ Subtração: $$7 - 4 = 3$$ Multiplicação: $$6 \\times 2 = 12$$ Divisão: $$8 \\div 4 = 2$$ INSERÇÃO DE VARIÁVEIS: Substitua '{problem}' pelo enunciado completo do problema. Substitua '{user_answer}' pela resposta exata dada pelo aluno. OBJETIVO FINAL: Ajudar o aluno a compreender o erro sem dar a resposta final e incentivá-lo a resolver com orientação clara, passo a passo.'")
+            messages = [ {"role": "user", "content": prompt} ] 
             payload = {
                 "model": LLM_MODEL,
-                "prompt": prompt,
+                "messages": messages,
                 "max_tokens": 1000,
                 "temperature": 0.6
             }
             response = requests.post(LLM_URL, json=payload)
             response.raise_for_status()
             result = response.json()
-            feedback = result.get("choices", {})[0].get("text", "").strip().split('</think>')[-1].strip()
+            feedback =  result.get("choices", [{}])[0].get("message", {}).get("content", "").strip().split('</think>')[-1].strip()
             feedback = format_latex_feedback(feedback)  # Formatar o feedback para renderização LaTeX
             return feedback if feedback else fallback
         except:
@@ -97,8 +97,8 @@ else:
                     if "Correto" in feedback:
                         st.success("Acertou")
                     else:
-                        st.error("Tente novamente.")  # Mensagem curta em vermelho
-                        st.write(feedback)  # Explicação detalhada em preto
+                        st.error("Tente novamente.")  
+                        st.write(feedback)  
                 else:
                     st.warning("Por favor, insira uma resposta.")
     elif option == "Fornecer equação":
@@ -111,7 +111,7 @@ else:
                 if "Correto" in feedback:
                     st.success("Acertou")
                 else:
-                    st.error("Tente novamente.")  # Mensagem curta em vermelho
-                    st.write(feedback)  # Explicação detalhada em preto
+                    st.error("Tente novamente.")  
+                    st.write(feedback)  
             else:
                 st.warning("Por favor, insira uma equação e uma resposta.")
