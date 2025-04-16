@@ -66,38 +66,56 @@ def generate_feedback(user_answer, correct_answer, problem):
             return fallback
 
 st.title("Tutor de Matemática Básica")
-
 if not data:
     st.write("Nenhum dado disponível. Verifique o arquivo 'data/dev-data.json'.")
 else:
-    topics = [t["topic"] for t in data]
-    topic = st.selectbox("Escolha o tópico:", topics)
-    topic_data = next(t for t in data if t["topic"] == topic)
+    options = ["Usar sistema implementado", "Fornecer equação"]
+    option = st.selectbox("Escolha a opção:", options)
 
-    st.write("**Explicação**:")
-    st.write(topic_data["explanation"])
-    st.write("**Exemplo**:")
-    for ex in topic_data["example"]:
-        st.write(ex)
+    if option == "Usar sistema implementado":
+        topics = [t["topic"] for t in data]
+        topic = st.selectbox("Escolha o tópico:", topics)
+        topic_data = next(t for t in data if t["topic"] == topic)
 
-    levels = ["easy", "medium", "difficult"]
-    level = st.selectbox("Nível de dificuldade:", levels)
-    questions = [q for q in topic_data["questions"] if q["level"] == level]
+        st.write("**Explicação**:")
+        st.write(topic_data["explanation"])
+        st.write("**Exemplo**:")
+        for ex in topic_data["example"]:
+            st.write(ex)
+        levels = ["easy", "medium", "difficult"]
+        level = st.selectbox("Nível de dificuldade:", levels)
+        questions = [q for q in topic_data["questions"] if q["level"] == level]
 
-    if questions:
-        question = questions[0]
-        st.write("**Questão**:")
-        st.write(question["problem"])
+        if questions:
+            question_index = st.selectbox("Escolha a questão:", [q['problem'] for q in questions], format_func=lambda x: x, index=0, key="question_selector")
+            question = questions[questions.index(next(q for q in questions if q['problem'] == question_index))]
 
-        user_answer = st.text_input("Sua resposta:", key=f"answer_{question['problem']}")
+            st.write("**Questão**:")
+            st.write(question["problem"])
+
+            user_answer = st.text_input("Sua resposta:", key=f"answer_{question['problem']}")
+
+            if st.button("Verificar"):
+                if user_answer:
+                    feedback = generate_feedback(user_answer, question["answer"], question["problem"])
+                    if "Correto" in feedback:
+                        st.success("Acertou")
+                    else:
+                        st.error("Tente novamente.")  # Mensagem curta em vermelho
+                        st.write(feedback)  # Explicação detalhada em preto
+                else:
+                    st.warning("Por favor, insira uma resposta.")
+    elif option == "Fornecer equação":
+        equation = st.text_input("Insira a equação:")
+        user_answer = st.text_input("Sua resposta:")
 
         if st.button("Verificar"):
-            if user_answer:
-                feedback = generate_feedback(user_answer, question["answer"], question["problem"])
+            if user_answer and equation:
+                feedback = generate_feedback(user_answer, equation, "Equação fornecida pelo usuário")
                 if "Correto" in feedback:
                     st.success("Acertou")
                 else:
                     st.error("Tente novamente.")  # Mensagem curta em vermelho
                     st.write(feedback)  # Explicação detalhada em preto
             else:
-                st.warning("Por favor, insira uma resposta.")
+                st.warning("Por favor, insira uma equação e uma resposta.")
