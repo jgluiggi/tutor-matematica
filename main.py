@@ -44,15 +44,11 @@ def generate_feedback(user_answer, correct_answer, problem):
     else:
         fallback = "Tente novamente. Dica: Para somar frações, encontre o denominador comum."
         try:
-            student_message = f"Eu tentei resolver '{problem}' e respondi '{user_answer}', explique meu erro e tente me direcionar no caminho certo sem revelar a resposta."
-            messages=[
-              {"role": "system", "content": "Você é um professor de matemática. Explique o erro de forma curta e clara, em pt-BR, como se estivesse ensinando frações para um estudante. Não retorne seu fluxo de pensamento, apenas a resolução passo a passo. Use LaTeX para as equações/resolução coloque os valores dentro de $$ ao invés de []."},
-              {"role": "user", "content": student_message}
-            ],
-            print(messages)
+            prompt=('Você é um professor de matemática. Seu objetivo é explicar de forma curta, clara e didática o erro do estudante ao resolver um problema de frações. Siga rigorosamente as instruções abaixo para garantir clareza, formatação correta e controle de fluxo. INSTRUÇÕES (siga todas exatamente): 1. NÃO retorne seu próprio raciocínio ou pensamentos. Apenas explique o erro do estudante e conduza o próximo passo da resolução, sem revelar a resposta final. 2. Use LaTeX entre delimitadores $$ para qualquer número, fração, operação ou equação. Exemplo: Correto → $$\frac{2}{3} + \frac{1}{3} = 1$$ Errado → [2/3] + [1/3] = 1 3. Estruture a resposta em etapas discretas numeradas. Após cada etapa, pare e peça confirmação ou diga ao estudante para continuar. 4. Ao explicar o erro do aluno, cite diretamente os valores de entrada: “Você tentou resolver '{problem}' e respondeu '{user_answer}'” 5. Após apontar o erro, direcione o aluno ao caminho correto com uma orientação clara e simples, sem dar a resposta. 6. NÃO assuma nada além do enunciado. Seja específico, direto e didático. EXEMPLO DE SAÍDA: Você tentou resolver '{problem}' e respondeu '{user_answer}'. 1. Vamos verificar sua resposta. O primeiro passo é transformar todas as frações para o mesmo denominador. Por exemplo: $$\frac{1}{2}$$ e $$\frac{1}{3}$$ → denominador comum é $$6$$. Pode fazer isso? INSERÇÃO DE VARIÁVEIS: Substitua '{problem}' pelo enunciado completo do problema. Substitua '{user_answer}' pela resposta exata dada pelo aluno. OBJETIVO FINAL: Ajudar o aluno a compreender o erro sem dar a resposta final e incentivá-lo a resolver com orientação clara, passo a passo.'
+            ),
             payload = {
                 "model": LLM_MODEL,
-                "messages": messages,
+                "prompt": prompt,
                 "max_tokens": 1000,
                 "temperature": 0.6
             }
