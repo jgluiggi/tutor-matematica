@@ -18,4 +18,4 @@ estamos rodando uma LLM 7B através do LM Studio para esta aplicação
 
 - pierreguillou/gpt2-small-portuguese
 - distilbert/distilgpt2
-- deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+- **deepseek-ai/DeepSeek-R1-Distill-Qwen-7B**
